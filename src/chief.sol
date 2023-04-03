@@ -201,3 +201,64 @@ contract DSChiefFab {
         iou.setOwner(address(chief));
     }
 }
+
+
+// `hat` address is unique root user (has every role) and the
+// unique owner of role 0 (typically 'sys' or 'internal')
+contract DSChiefV2 is DSRoles, DSNote {
+
+    // lift role is used to elect a new hat
+    uint8 constant public ROLE_LIFT = 1;
+    // the chieftain's hat
+    address public hat;
+
+    constructor(address[] memory lifters)
+        public
+    {
+        bytes4 sig = bytes4(keccak256(abi.encodePacked("lift(address)")));
+        setRoleCapability(ROLE_LIFT, address(this), sig, true);
+        for (uint i = 0; i < lifters.length; i++) {
+            setUserRole(lifters[i], ROLE_LIFT, true);
+        }
+        authority = this;
+        owner = address(0);
+    }
+
+    function setOwner(address owner_) public {
+        owner_;
+        revert();
+    }
+
+    function setAuthority(DSAuthority authority_) public {
+        authority_;
+        revert();
+    }
+
+    function isUserRoot(address who)
+        public view
+        returns (bool)
+    {
+        return (who == hat);
+    }
+
+    function setRootUser(address who, bool enabled) public {
+        who;
+        enabled;
+        revert();
+    }
+
+    // like elect this address to be the hat,
+    function lift(address whom)
+        public
+        auth
+        note
+    {
+        hat = whom;
+    }
+}
+
+contract DSChiefFabV2 {
+    function newChief(address[] memory lifters) public returns (DSChiefV2 chief) {
+        chief = new DSChiefV2(lifters);
+    }
+}
